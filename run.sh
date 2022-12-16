@@ -11,8 +11,9 @@ do
             data_file=data/$dataset/preds_$model.json
             for label_type in normal soft
             do
-                if [[ $label_type == "soft" ]]
+                if [ $label_type == "soft" ]
                 then
+                    echo "Soft labels"
                     name=${dataset}_${model}_${confidence}_soft
                     CUDA_VISIBLE_DEVICES=0,1,2,3 python scripts/emnlp22/train.py \
                         -t \
@@ -21,15 +22,17 @@ do
                         -df $data_file \
                         -c $confidence \
                         -n $name;
-                else
-                    name=${dataset}_${model}_${confidence}
-                    CUDA_VISIBLE_DEVICES=0,1,2,3 python scripts/emnlp22/train.py \
-                        -t \
-                        -bs 64 \
-                        -df $data_file \
-                        -c $confidence \
-                        -n $name;
+                # else
+                #     echo "Hard labels"
+                #     name=${dataset}_${model}_${confidence}
+                #     CUDA_VISIBLE_DEVICES=0,1,2,3 python scripts/emnlp22/train.py \
+                #         -t \
+                #         -bs 64 \
+                #         -df $data_file \
+                #         -c $confidence \
+                #         -n $name;
                 fi
+                echo "Testing"
                 CUDA_VISIBLE_DEVICES=0,1,2,3 python scripts/emnlp22/benchmark.py \
                     -w models/$name.bin \
                     -df $data_file \
@@ -38,18 +41,20 @@ do
             done
         done
     done
-    name=${dataset}_supervised
-    test_file=data/$dataset/data.json
-    train_file=data/$dataset/data_train.json
-    CUDA_VISIBLE_DEVICES=0,1,2,3 python scripts/emnlp22/train.py \
-        -t \
-        -bs 64 \
-        -df $train_file \
-        -c 0 \
-        -n $name;
-    CUDA_VISIBLE_DEVICES=0,1,2,3 python scripts/emnlp22/benchmark.py \
-        -w models/$name.bin \
-        -df $test_file \
-        -bs 1024 \
-        -n $name
+#     echo "Supervised"
+#     name=${dataset}_supervised
+#     test_file=data/$dataset/data.json
+#     train_file=data/$dataset/data_train.json
+#     CUDA_VISIBLE_DEVICES=0,1,2,3 python scripts/emnlp22/train.py \
+#         -t \
+#         -bs 64 \
+#         -df $train_file \
+#         -c 0 \
+#         -n $name;
+#     echo "Testing"
+#     CUDA_VISIBLE_DEVICES=0,1,2,3 python scripts/emnlp22/benchmark.py \
+#         -w models/$name.bin \
+#         -df $test_file \
+#         -bs 1024 \
+#         -n $name
 done
