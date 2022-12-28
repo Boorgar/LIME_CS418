@@ -9,6 +9,9 @@ yelp_reviews = datasets.load_dataset("yelp_review_full", cache_dir="./datasets")
 dbpedia = datasets.load_dataset("dbpedia_14", cache_dir="./datasets")
 
 #%%
+print(agnews['clas'])
+
+#%%
 print("Sample data\n")
 
 print("Train sample")
@@ -22,28 +25,20 @@ print(agnews['test'][0]['text'])
 print(agnews['test'][0]['label'])
 
 #%%
-batch_size = 32
-cpu_count = 8
-tokenizer = None
-supervised = False
-confidence_threshold = 0.9
+# json:
+# {
+#   "classes": ["World", "Sports", "Business", "Sci/Tech"],
+#  "data": [
+#   {
+#    "label": 3,
+#   "text": "Wall St. Bears Claw Back Into the Black (Reuters) Reuters - Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green again."
+#  },
+# ...
+# ] 
+# }
 
-data = agnews['train']
+#%%
+train_data = agnews['train']
+test_data = agnews['test']
 
-for sample in data:
-    print(sample)
-    break
-
-# filtered = [
-#     sample
-#     for sample in data["data"]
-#     if sample["confidence"][sample["prediction"]] >= confidence_threshold
-# ]
-
-# data["data"] = filtered
-train_set = PseudoDataset(data, tokenizer, use_pseudo=not supervised)
-train_dataloader = DataLoader(
-    train_set,
-    batch_size=batch_size,
-    num_workers=cpu_count // 4,
-)
+train_data

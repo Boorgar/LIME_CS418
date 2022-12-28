@@ -197,6 +197,23 @@ if __name__ == "__main__":
     with open(args.data_file) as rf:
         data = json.load(rf)
 
+    # data
+    # |
+    # |--- classes
+    # |--- data
+    #       |
+    #       |--- label
+    #       |--- text
+
+    # data
+    # |
+    # |--- train
+    #       |
+    #       |--- text
+    #       |--- labels
+    # |--- test
+
+
     classes = data["classes"]
 
     print(f"Classes ({len(classes)}): {classes}")

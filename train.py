@@ -14,8 +14,10 @@ logging.getLogger("lightning").setLevel(logging.ERROR)
 import numpy as np
 import pytorch_lightning as pl
 import torch
+
 from datamodule import PseudoDataset
 from model import BertCategorizerModel as Model
+
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
@@ -116,7 +118,7 @@ def train(
         ]
     data["data"] = filtered
     # class_weights = get_class_weights(data)
-    class_weights = None
+    class_weights = None    
 
     training_steps = len(data["data"]) // grad_batches // trainer.devices * max_epochs
     # warmup_steps = int(training_steps * 0.01)
@@ -277,8 +279,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "-q", "--quick", default=False, action="store_true", help="Do a quick test run"
     )
-    parser.add_argument("-bs", "--batch_size", type=int, default=1, help="Batch size")
-    parser.add_argument("-me", "--max-epochs", default=5, type=int, help="Max epochs")
+    parser.add_argument(
+        "-bs", "--batch_size", type=int, default=1, help="Batch size"
+    )
+    parser.add_argument(
+        "-me", "--max-epochs", default=5, type=int, help="Max epochs"
+    )
     parser.add_argument(
         "-lr", "--learning-rate", default=1e-4, type=float, help="Learning rate"
     )

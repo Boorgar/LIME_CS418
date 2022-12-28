@@ -2,3 +2,6 @@
 Graphviz/
 AGNEWS.zip
 data/
+datasets/
+__pycache__/
+.vscode/
