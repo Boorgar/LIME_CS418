@@ -131,7 +131,6 @@ def classify_qa(model, tokenizer, categories, verbalizer, text):
 
 
 if __name__ == "__main__":
-
     # Example:
     #
     # python scripts/emnlp22/create_pseudo_labels.py \
@@ -217,26 +216,28 @@ if __name__ == "__main__":
     classes = data["classes"]
 
     print(f"Classes ({len(classes)}): {classes}")
+    torch.cuda.empty_cache()
+    with torch.no_grad():
 
-    correct = total = 0
-    samples = []
-    for i, sample in enumerate(tqdm(data["data"])):
-        text = sample["text"]
-        prediction, probs = classify(model, tokenizer, classes, verbalizer, text)
-        # predicted_class = classes[prediction]
-        if prediction.item() == sample["label"]:
-            correct += 1
-        total += 1
-        prob = probs[prediction]
-        out_sample = {
-            "label": sample["label"],
-            "prediction": prediction.item(),
-            "confidence": probs,
-            "text": sample["text"],
-        }
-        samples.append(out_sample)
-    print(f"Stats for {args.model_type}, {args.out_file}: {correct / total}")
+        correct = total = 0
+        samples = []
+        for i, sample in enumerate(tqdm(data["data"])):
+            text = sample["text"]
+            prediction, probs = classify(model, tokenizer, classes, verbalizer, text)
+            # predicted_class = classes[prediction]
+            if prediction.item() == sample["label"]:
+                correct += 1
+            total += 1
+            prob = probs[prediction]
+            out_sample = {
+                "label": sample["label"],
+                "prediction": prediction.item(),
+                "confidence": probs,
+                "text": sample["text"],
+            }
+            samples.append(out_sample)
+        print(f"Stats for {args.model_type}, {args.out_file}: {correct / total}")
 
-    out_data = {"classes": classes, "data": samples}
-    with open(args.out_file, "w") as wf:
-        json.dump(out_data, wf, indent=4, ensure_ascii=False)
+        out_data = {"classes": classes, "data": samples}
+        with open(args.out_file, "w") as wf:
+            json.dump(out_data, wf, indent=4, ensure_ascii=False)

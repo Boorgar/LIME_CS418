@@ -1,15 +1,14 @@
 #%%
 import datasets
-from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 agnews = datasets.load_dataset("ag_news", cache_dir="./datasets")
-g20news = datasets.load_dataset("SetFit/20_newsgroups", cache_dir="./datasets")
-yelp_reviews = datasets.load_dataset("yelp_review_full", cache_dir="./datasets")
-dbpedia = datasets.load_dataset("dbpedia_14", cache_dir="./datasets")
+# g20news = datasets.load_dataset("SetFit/20_newsgroups", cache_dir="./datasets")
+# yelp_reviews = datasets.load_dataset("yelp_review_full", cache_dir="./datasets")
+# dbpedia = datasets.load_dataset("dbpedia_14", cache_dir="./datasets")
 
 #%%
-print(agnews['clas'])
+print(agnews)
 
 #%%
 print("Sample data\n")
@@ -38,9 +37,11 @@ print(agnews['test'][0]['label'])
 # }
 
 #%%
-train_data = agnews['train']
-test_data = agnews['test']
+import json
+train_data = ['train']
+test_data = ['test']
 
+# Create training data
 texts = train_data['text']
 labels = train_data['label']
 
@@ -49,39 +50,43 @@ classes.sort()
 classes = [str(c) for c in classes]
 data = [{'text': text, 'label': label} for text, label in zip(texts, labels)]
 
-import json
+out_data = {"classes": classes, "data": data}
+with open('_train.json', "w", encoding="utf-8") as wf:
+    json.dump(out_data, wf, indent=4, ensure_ascii=False)
+
+
+# Create test data
+texts = train_data['text']
+labels = train_data['label']
+
+classes = train_data.unique('label')
+classes.sort()
+classes = [str(c) for c in classes]
+data = [{'text': text, 'label': label} for text, label in zip(texts, labels)]
 
 out_data = {"classes": classes, "data": data}
-with open('test.json', "w") as wf:
+with open('agnews_test.json', "w", encoding="utf-8") as wf:
     json.dump(out_data, wf, indent=4, ensure_ascii=False)
 
 #%%
-with open('test.json') as rf:
-    data = json.load(rf)
+import json
+test_output = []
+with open('output.txt') as file:
+    line = file.readline().split()
+with open('agnews_test.json') as file:
+    data = json.load(file)
 
-print(data['classes'])
-print(data['data'][0])
+test_y = []
+for i in data['data']:
+    test_y.append(i['label'])
 
-#%%
-import create_pseudo_labels
-
-classify = create_pseudo_labels.
-
-correct = total = 0
-samples = []
-for i, sample in enumerate(tqdm(data["data"])):
-    text = sample["text"]
-    prediction, probs = classify(model, tokenizer, classes, verbalizer, text)
-    # predicted_class = classes[prediction]
-    if prediction.item() == sample["label"]:
-        correct += 1
+counter = 0
+total = 0
+for i in range(len(line)):
     total += 1
-    prob = probs[prediction]
-    out_sample = {
-        "label": sample["label"],
-        "prediction": prediction.item(),
-        "confidence": probs,
-        "text": sample["text"],
-    }
-    samples.append(out_sample)
-print(f"Stats for {args.model_type}, {args.out_file}: {correct / total}")
+    if int(line[i]) == test_y[i]:
+        counter += 1
+    else:
+        print(line[i], test_y[i])
+print(counter/total)
+# %%

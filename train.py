@@ -6,6 +6,7 @@ import shutil
 import sys
 import time
 from collections import defaultdict
+import pickle
 
 from pytorch_lightning.strategies import DDPSpawnStrategy
 
@@ -69,7 +70,6 @@ def train(
 
     # Initialize trainer.
     grad_batches = 1
-    gpus = 0 if quick else -1
     strategy = None if quick else DDPSpawnStrategy(find_unused_parameters=False)
 
     checkpoint_callback = ModelCheckpoint(
@@ -84,7 +84,7 @@ def train(
     # callbacks = [early_stop_callback, checkpoint_callback, lr_monitor]
     callbacks = [checkpoint_callback, lr_monitor]
 
-    version = f"{name}" if not quick else "quick_test"
+    version = f"{name}" 
     logger = TensorBoardLogger(
         save_dir=os.getcwd(),
         version=version,
@@ -92,7 +92,8 @@ def train(
     )
 
     trainer = pl.Trainer(
-        gpus=gpus,
+        accelerator='gpu',
+        devices=1,
         strategy=strategy,
         callbacks=callbacks,
         # plugins=plugins,
@@ -100,10 +101,10 @@ def train(
         logger=logger,
         accumulate_grad_batches=grad_batches,
         deterministic=True,
-        # max_epochs=max_epochs,
-        max_epochs=1,
+        max_epochs=max_epochs,
         # precision=16,
     )
+    print(len(data["data"]))
 
     # Calculate class imbalance:
     num_classes = len(data["classes"])
@@ -119,8 +120,9 @@ def train(
     data["data"] = filtered
     # class_weights = get_class_weights(data)
     class_weights = None    
+    print(len(data["data"]))
 
-    training_steps = len(data["data"]) // grad_batches // trainer.devices * max_epochs
+    training_steps = len(data["data"]) // grad_batches // trainer.num_devices * max_epochs
     # warmup_steps = int(training_steps * 0.01)
     warmup_steps = int(training_steps * warmup_ratio)
     print("============================================")
@@ -156,7 +158,7 @@ def train(
     train_dataloader = DataLoader(
         train_set,
         batch_size=batch_size,
-        num_workers=cpu_count // 4,
+        num_workers=4,
     )
     # validate_dataloader = DataLoader(
     # validate_set, batch_size=batch_size, num_workers=cpu_count // 4
@@ -187,7 +189,7 @@ def train(
     # best_model_path, num_classes=num_classes, language=language
     # )
 
-    return best_model_path
+    # return best_model_path
 
 
 def predict(data, weights, batch_size, language):
@@ -201,16 +203,15 @@ def predict(data, weights, batch_size, language):
     cpu_count = os.cpu_count()
     test_set = PseudoDataset(data, tokenizer, use_pseudo=False, shuffle=False)
     test_dataloader = DataLoader(
-        test_set, batch_size=batch_size, num_workers=1, shuffle=False
+        test_set, batch_size=batch_size, num_workers=4, shuffle=False
     )
 
     # Initialize trainer.
-    # gpus = 0 if quick else -1
-    gpus = -1
     strategy = "dp"
 
     trainer = pl.Trainer(
-        gpus=gpus,
+        accelerator='gpu',
+        devices=1,
         strategy=strategy,
         # plugins=plugins,
         deterministic=True,
@@ -304,7 +305,7 @@ if __name__ == "__main__":
 
     with open(args.data_file) as rf:
         data = json.load(rf)
-
+    print(len(data['data']))
     if args.do_train:
         best_model_path = train(
             data,
@@ -323,9 +324,12 @@ if __name__ == "__main__":
         )
     # model_path = best_model_path if args.do_train else
     else:
-        predict(
+        preds = predict(
             data,
             args.weights,
             args.batch_size,
             args.language,
-        )
+        )  
+        with open('output.txt', 'w') as f:
+            for item in preds:
+                f.write("%s " % item)
