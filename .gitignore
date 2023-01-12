@@ -1,4 +1,8 @@
-
+lightning_logs/
+models/
+predictions/
+results/
+datasets/
 Graphviz/
 AGNEWS.zip
 data/
